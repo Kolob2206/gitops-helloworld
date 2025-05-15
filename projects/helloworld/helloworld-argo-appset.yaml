@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1 
+kind: ApplicationSet
+metadata:
+  name: hellworld-argo-appset
+spec:
+  generators:
+  - list: 
+      elements: 
+      - namespace: production
+      - namespace: staging
+  template: 
+    metadata:
+      name: 'helloworld-{{namespace}}-app'
+      labels: 
+        environment: '{{namespace}}'
+      annotations:
+        codefresh.io/product: helloworld  
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/FinnianDempsey/gitops-helloworld.git
+        targetRevision: HEAD
+        path: manifests/helloworld-{{namespace}}
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+          allowEmpty: false
+        syncOptions:
+          - PrunePropagationPolicy=foreground
+          - Replace=false
+          - PruneLast=false
+          - Validate=true
+          - CreateNamespace=true
+          - ApplyOutOfSyncOnly=false
+          - ServerSideApply=true
+          - RespectIgnoreDifferences=false
